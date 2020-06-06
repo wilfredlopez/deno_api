@@ -1,3 +1,7 @@
+import { config } from "https://deno.land/x/dotenv/mod.ts";
+config();
+import "https://deno.land/x/dotenv/load.ts";
+
 import {
   Application,
 } from "https://deno.land/x/oak/mod.ts";

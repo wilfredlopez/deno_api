@@ -1,0 +1,53 @@
+{
+  // "$schema": "https://deno.land/x/denon/schema.json",
+  // globally applied to all scripts
+  "env": {
+    "somekey": "4000"
+  },
+  // globally applied to all scripts
+  "allow": {
+    // "read": "/etc", // --allow-read=/etc
+    "env": true, // --allow-env,
+    "net": true
+  },
+  "scripts": {
+    "start": {
+      "cmd": "deno run src/index.ts",
+      // with an optional description that
+      // is shown when you run `denon` to list
+      // all the scripts
+      "desc": "Run the main server.",
+
+      // available options...
+      // they are described in the next paragraph
+      "allow": ["env", "watch", "net"]
+      // "unstable": true,
+
+      // running `denon start` will resolve in
+      // deno run --allow-env --allow-watch --unstable src/index.ts
+      // "env": {
+      //   "PORT": "4000"
+      // }
+    }
+  },
+  "watcher": {
+    // The number of milliseconds after the last change.
+    "interval": 350,
+    // The file extensions that it will scan for.
+    "exts": ["js", "ts", "json"],
+    // The globs that it will scan for.
+    "match": ["*.*"],
+    // The globs that it will not scan for.
+    "skip": ["*/.git/*"],
+    // Use the legacy file monitoring algorithm. (walking)
+    "legacy": false
+  },
+  "logger": {
+    // Clear screen after every restart.
+    // "fullscreen": false,
+    // // Output only errors
+    // "quiet": false,
+    // Output debug messages
+    "debug": true
+  }
+}

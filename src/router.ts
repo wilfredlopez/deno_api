@@ -2,7 +2,7 @@ import {
   Router,
 } from "https://deno.land/x/oak/mod.ts";
 import notFoundPage from "./middleware/notFoundPage.ts";
-
+import productController from "./controllers/productController.ts";
 const router = new Router();
 const books = new Map<string, any>();
 
@@ -18,6 +18,11 @@ const AVAILABLE_ROUTES = [
   },
   { GET: "/api/book" },
   { GET: "/api/book/:id" },
+  { GET: "/api/v1/products" },
+  { GET: "/api/v1/products/:id" },
+  { DELETE: "/api/v1/products/:id" },
+  { POST: "/api/v1/products" },
+  { PUT: "/api/v1/products/:id" },
 ];
 
 router
@@ -37,5 +42,13 @@ router
       return notFoundPage(context);
     }
   });
+
+const BASE_URL = "/api/v1";
+router
+  .get(`${BASE_URL}/products`, productController.getAll)
+  .get(`${BASE_URL}/products/:id`, productController.getOne)
+  .post(`${BASE_URL}/products`, productController.post)
+  .put(`${BASE_URL}/products/:id`, productController.update)
+  .delete(`${BASE_URL}/products/:id`, productController.delete);
 
 export default router;
