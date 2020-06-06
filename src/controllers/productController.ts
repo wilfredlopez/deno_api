@@ -31,6 +31,17 @@ interface ResponseConvention<T> {
 }
 
 export class ProductController {
+  static isValidRawProduct(rawProduct: Omit<Product, "id">) {
+    if (
+      !rawProduct.description || !rawProduct.name || !rawProduct.price
+    ) {
+      return false;
+    }
+    if (rawProduct.description.trim() === "") return false;
+    if (rawProduct.name.trim() === "") return false;
+    if (rawProduct.price <= 0) return false;
+    return true;
+  }
   getAll({ request, response }: RouterContext) {
     response.status = 200;
     const RES: ResponseConvention<Product[]> = {
@@ -63,24 +74,63 @@ export class ProductController {
   }
   async post({ request, response }: RouterContext) {
     const body = await request.body();
-    const { description, name, price } = body.value() as Omit<Product, "id">;
-    console.log(description, name, price);
+    const { description, name, price } = body.value as Omit<Product, "id">;
+
     const newProduct = {
       description,
-      id: SAMPLE_PRODUCTS.length,
+      id: SAMPLE_PRODUCTS.length + 1,
       name,
       price,
     };
-    SAMPLE_PRODUCTS.push(newProduct);
-    response.body = {
-      ok: true,
-      data: newProduct,
-      error: null,
-    };
+    if (ProductController.isValidRawProduct(newProduct)) {
+      SAMPLE_PRODUCTS.push(newProduct);
+      response.status = 201;
+      response.body = {
+        ok: true,
+        data: newProduct,
+        error: null,
+      };
+    } else {
+      response.status = 400;
+      response.body = {
+        ok: false,
+        error: "validation failed",
+        data: null,
+      };
+    }
   }
   async update({ request, response, params }: RouterContext<{ id: string }>) {
     const id = params.id;
-    response.body = "Product Controller update" + id;
+    const index = SAMPLE_PRODUCTS.findIndex((p) => p.id === +id);
+    if (index === -1) {
+      response.status = 404;
+      response.body = {
+        ok: false,
+        error: "Not Found",
+        data: null,
+      };
+      return;
+    }
+
+    const body = await request.body();
+    const updated = body.value as Omit<Product, "id">;
+    const keys = Object.keys(updated);
+    keys.forEach((key) => {
+      const i = key as keyof Omit<Product, "id">;
+      if (SAMPLE_PRODUCTS[index][i]) {
+        if (i === "price") {
+          SAMPLE_PRODUCTS[index][i] = updated[i];
+        } else {
+          SAMPLE_PRODUCTS[index][i] = updated[i];
+        }
+      }
+    });
+    response.status = 202;
+    response.body = {
+      data: SAMPLE_PRODUCTS[index],
+      error: null,
+      ok: true,
+    };
   }
   delete({ request, response, params }: RouterContext<{ id: string }>) {
     const id = params.id;

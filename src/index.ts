@@ -1,5 +1,6 @@
-import { config } from "https://deno.land/x/dotenv/mod.ts";
-config();
+import * as dotEnv from "https://deno.land/x/dotenv/mod.ts";
+
+//Loads ENV Data to Deno.env
 import "https://deno.land/x/dotenv/load.ts";
 
 import {
@@ -8,22 +9,20 @@ import {
 import { logger } from "./middleware/logger.ts";
 import { responseTime } from "./middleware/responseTime.ts";
 import notFoundPage from "./middleware/notFoundPage.ts";
-import { LogSuccess, LogFailure } from "./utils/log.ts";
+import { LogSuccess } from "./utils/log.ts";
 import router from "./router.ts";
+import errorListener from "./middleware/errorListener.ts";
+//Import env file.
+dotEnv.config();
 
 const app = new Application();
 
-app.addEventListener("error", (evt) => {
-  // Will log the thrown error to the console.
-  // console.log(evt.error);
-  LogFailure("@Error Listener", evt.error);
-});
-
+//Error Listener middleware
+errorListener(app);
 // Logger
 app.use(logger);
 // Response Time
 app.use(responseTime);
-
 app.use(router.routes());
 app.use(router.allowedMethods());
 

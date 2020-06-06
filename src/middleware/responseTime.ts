@@ -1,9 +1,5 @@
 import {
-  Application,
-  Router,
-  send,
   Context,
-  Status,
 } from "https://deno.land/x/oak/mod.ts";
 
 export const responseTime = async (
