@@ -1,28 +1,34 @@
 import {
   RouterContext,
 } from "https://deno.land/x/oak/mod.ts";
+import { Mapper } from "../utils/Mapper.ts";
 
 interface Product {
-  id: number;
+  readonly id: string;
   name: string;
   price: number;
   description: string;
 }
+const ProductsMap = new Mapper<Product>();
 
 const SAMPLE_PRODUCTS: Product[] = [
   {
-    id: 1,
+    id: "1",
     description: "Good P",
     name: "Lakers Cap",
     price: 22.99,
   },
   {
-    id: 2,
+    id: "2",
     description: "Not Good For You.",
     name: "Yankees Cap",
     price: 50.02,
   },
 ];
+
+for (const prod of SAMPLE_PRODUCTS) {
+  ProductsMap.set(prod.id, prod);
+}
 
 interface ResponseConvention<T> {
   ok: boolean;
@@ -46,14 +52,14 @@ export class ProductController {
     response.status = 200;
     const RES: ResponseConvention<Product[]> = {
       ok: true,
-      data: SAMPLE_PRODUCTS,
+      data: ProductsMap.toArray(),
       error: null,
     };
     response.body = RES;
   }
   getOne({ request, response, params }: RouterContext<{ id: string }>) {
     const id = params.id;
-    const product = SAMPLE_PRODUCTS.find((p) => p.id === +id);
+    const product = ProductsMap.get(id);
 
     if (product) {
       response.status = 200;
@@ -78,12 +84,12 @@ export class ProductController {
 
     const newProduct = {
       description,
-      id: SAMPLE_PRODUCTS.length + 1,
+      id: ProductsMap.size + 1 + "",
       name,
       price,
     };
     if (ProductController.isValidRawProduct(newProduct)) {
-      SAMPLE_PRODUCTS.push(newProduct);
+      ProductsMap.set(newProduct.id, newProduct);
       response.status = 201;
       response.body = {
         ok: true,
@@ -101,8 +107,8 @@ export class ProductController {
   }
   async update({ request, response, params }: RouterContext<{ id: string }>) {
     const id = params.id;
-    const index = SAMPLE_PRODUCTS.findIndex((p) => p.id === +id);
-    if (index === -1) {
+    const exist = ProductsMap.has(id);
+    if (!exist) {
       response.status = 404;
       response.body = {
         ok: false,
@@ -115,27 +121,30 @@ export class ProductController {
     const body = await request.body();
     const updated = body.value as Omit<Product, "id">;
     const keys = Object.keys(updated);
+    const prod = ProductsMap.get(id)!;
     keys.forEach((key) => {
-      const i = key as keyof Omit<Product, "id">;
-      if (SAMPLE_PRODUCTS[index][i]) {
-        if (i === "price") {
-          SAMPLE_PRODUCTS[index][i] = updated[i];
-        } else {
-          SAMPLE_PRODUCTS[index][i] = updated[i];
+      const i = key as keyof Product;
+      if (prod[i]) {
+        if (i !== "id") {
+          if (i === "price") {
+            prod[i] = updated[i];
+          } else {
+            prod[i] = updated[i];
+          }
         }
       }
     });
     response.status = 202;
     response.body = {
-      data: SAMPLE_PRODUCTS[index],
+      data: prod,
       error: null,
       ok: true,
     };
   }
   delete({ request, response, params }: RouterContext<{ id: string }>) {
     const id = params.id;
-    const index = SAMPLE_PRODUCTS.findIndex((p) => p.id === +id);
-    if (index === -1) {
+    const has = ProductsMap.has(id);
+    if (!has) {
       response.status = 400;
       response.body = {
         ok: false,
@@ -143,7 +152,7 @@ export class ProductController {
         data: null,
       };
     } else {
-      const prod = SAMPLE_PRODUCTS.splice(index, 1);
+      const prod = ProductsMap.delete(id)!;
       response.body = {
         ok: true,
         data: prod,
